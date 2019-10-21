@@ -1,0 +1,16 @@
+smallsh.h, smallsh.c e input.c contengono il codice
+commentato della shell illustrata nelle esercitazioni 
+
+Compilare usando il makefile.
+"make clean" rimuove i file prodotti dalla compilazione
+
+Il file
+
+background.jpg
+
+è un disegno relativo al lancio di comandi in background
+(punti 2 e 3 dell'esercizio)
+
+Si consiglia di non utilizzare l'esistenza di segnali diversi
+da quelli menzionati negli appunti.
+
