@@ -56,6 +56,27 @@ int procline(void) /* tratta una riga di input */
   }
 }
 
+void processEndNotifier()
+{
+  int exitstat = 0, int ret = 1;
+  while (true)
+  {
+    ret = waitpid(-1, &exitstat, WNOHANG);
+    //0 = Nessun cambiamento, -1 = errore, >0 cambiamento
+    switch (ret)
+    {
+    case -1:
+      perror("C'e' stato un errore.");
+      break;
+    case 0:
+      break;
+    default:
+      printf("\nProcesso in background chiuso. PID: %d\n", ret);
+      break;
+    }
+  }
+}
+
 void runcommand(char **cline, int where) /* esegue un comando */
 {
   pid_t pid;
@@ -83,8 +104,10 @@ void runcommand(char **cline, int where) /* esegue un comando */
 
   /* la seguente istruzione non tiene conto della possibilita'
      di comandi in background  (where == BACKGROUND) */
-
-  ret = wait(&exitstat);
+  if (where == FOREGROUND)
+    ret = wait(&exitstat);
+  else
+    printf("\nProcesso in background. PID: %d\n", pid);
 
   if (ret == -1)
     perror("wait");
