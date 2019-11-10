@@ -58,8 +58,8 @@ int procline(void) /* tratta una riga di input */
 
 void processEndNotifier()
 {
-  int exitstat = 0, int ret = 1;
-  while (true)
+  int exitstat = 0, ret = 1;
+  while (1)
   {
     ret = waitpid(-1, &exitstat, WNOHANG);
     //0 = Nessun cambiamento, -1 = errore, >0 cambiamento
