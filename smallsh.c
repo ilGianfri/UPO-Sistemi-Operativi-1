@@ -58,22 +58,23 @@ int procline(void) /* tratta una riga di input */
 
 void processEndNotifier()
 {
-  int exitstat = 0, ret = 1;
-  while (1)
+  int exitcode;
+  pid_t pid;
+
+  /*
+  WAITPID ritorna 0 se usato con WNOHANG e non ci sono figli che hanno terminato
+          ritorna -1 in caso di errore
+          altrimenti ritorna il pid del figlio
+
+          Se usato senza WNOHANG sospende il padre finchè il figlio non termina
+
+  WNOHANG controlla i processi figli senza sospendere il chiamante (padre)
+  PID -1 controlla tutti i figli
+  WEXITSTATUS riporta gli 8 bit meno significativi del codice di ritorno del figlio
+  */
+  while ((pid = waitpid(-1, &exitcode, WNOHANG)) > 0)
   {
-    ret = waitpid(-1, &exitstat, WNOHANG);
-    //0 = Nessun cambiamento, -1 = errore, >0 cambiamento
-    switch (ret)
-    {
-    case -1:
-      perror("C'e' stato un errore.");
-      break;
-    case 0:
-      break;
-    default:
-      printf("\nProcesso in background chiuso. PID: %d\n", ret);
-      break;
-    }
+    printf("Il processo %s è terminato con codice %d\n", pid, WEXITSTATUS(exitcode));
   }
 }
 
@@ -107,7 +108,10 @@ void runcommand(char **cline, int where) /* esegue un comando */
   if (where == FOREGROUND)
     ret = wait(&exitstat);
   else
+  {
     printf("\nProcesso in background. PID: %d\n", pid);
+    processEndNotifier();
+  }
 
   if (ret == -1)
     perror("wait");
