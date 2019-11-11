@@ -56,6 +56,7 @@ int procline(void) /* tratta una riga di input */
   }
 }
 
+//Punto 2
 void processEndNotifier()
 {
   int exitcode;
@@ -74,7 +75,7 @@ void processEndNotifier()
   */
   while ((pid = waitpid(-1, &exitcode, WNOHANG)) > 0)
   {
-    printf("Il processo %s è terminato con codice %d\n", pid, WEXITSTATUS(exitcode));
+    printf("Il processo %d è terminato con codice %d\n", pid, WEXITSTATUS(exitcode));
   }
 }
 
