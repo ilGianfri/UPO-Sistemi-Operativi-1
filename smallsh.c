@@ -1,7 +1,9 @@
 #include "smallsh.h"
 #include <sys/types.h>
 
-char *prompt = "Dare un comando>";
+char *prompt = "%s : %s:";
+
+void processEndNotifier();
 
 int procline(void) /* tratta una riga di input */
 {
@@ -28,7 +30,7 @@ int procline(void) /* tratta una riga di input */
       if (narg < MAXARG)
         narg++;
       break;
-
+    
     /* se fine riga o ';' o '&' esegue il comando ora contenuto in arg,
 	 mettendo NULL per segnalare la fine degli argomenti: serve a execvp */
     case EOL:
@@ -45,7 +47,10 @@ int procline(void) /* tratta una riga di input */
       /* se fine riga, procline e' finita */
 
       if (toktype == EOL)
+      {
+        processEndNotifier();
         return 1;
+      }
 
       /* altrimenti (caso del comando terminato da ';' o '&') 
            bisogna ricominciare a riempire arg dall'indice 0 */
@@ -104,14 +109,11 @@ void runcommand(char **cline, int where) /* esegue un comando */
 
   /* processo padre: avendo messo exec e exit non serve "else" */
 
-  /* la seguente istruzione non tiene conto della possibilita'
-     di comandi in background  (where == BACKGROUND) */
   if (where == FOREGROUND)
     ret = wait(&exitstat);
   else
   {
     printf("\nProcesso in background. PID: %d\n", pid);
-    processEndNotifier();
   }
 
   if (ret == -1)
@@ -120,6 +122,8 @@ void runcommand(char **cline, int where) /* esegue un comando */
 
 int main()
 {
+  prompt = malloc(100);
+  sprintf(prompt, "%%%s:%s:", getenv("USER"), getenv("HOME"));
   while (userin(prompt) != EOF)
     procline();
 }
