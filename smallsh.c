@@ -1,9 +1,11 @@
 #include "smallsh.h"
+#include<signal.h>
 #include <sys/types.h>
 
-char *prompt = "%s : %s:";
-
+char *prompt;
+pid_t pid_foreground;
 void processEndNotifier();
+void sig_handler(int sig);
 
 int procline(void) /* tratta una riga di input */
 {
@@ -84,6 +86,17 @@ void processEndNotifier()
   }
 }
 
+//punto 3
+void sig_handler(int sig)
+{
+  if (sig == SIGINT)
+  {
+    kill(pid_foreground, SIGINT);
+  }
+
+  signal(SIGINT, SIG_DFL);
+}
+
 void runcommand(char **cline, int where) /* esegue un comando */
 {
   pid_t pid;
@@ -110,9 +123,14 @@ void runcommand(char **cline, int where) /* esegue un comando */
   /* processo padre: avendo messo exec e exit non serve "else" */
 
   if (where == FOREGROUND)
+  {
+    signal(SIGINT, sig_handler);
+    pid_foreground = pid;
     ret = wait(&exitstat);
+  }
   else
   {
+    signal(SIGINT, SIG_DFL);
     printf("\nProcesso in background. PID: %d\n", pid);
   }
 
@@ -122,6 +140,8 @@ void runcommand(char **cline, int where) /* esegue un comando */
 
 int main()
 {
+  signal(SIGINT, SIG_DFL);
+
   prompt = malloc(100);
   sprintf(prompt, "%%%s:%s:", getenv("USER"), getenv("HOME"));
   while (userin(prompt) != EOF)
