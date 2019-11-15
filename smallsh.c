@@ -103,7 +103,7 @@ void bpid_add(pid_t pid)
 
   strcpy(new, BPID);
   
-  char *spid = malloc(sizeof(pid));
+  char *spid = malloc(sizeof(pid) + 1);
   sprintf(spid, "%d", pid);
   
   strcat(new, ":");
@@ -115,6 +115,7 @@ void bpid_add(pid_t pid)
   setenv("BPID", new, 1);
 
   free(new);
+  free(spid);
 }
 
 void bpid_remove(pid_t pid)
@@ -122,14 +123,14 @@ void bpid_remove(pid_t pid)
   char *BPID = getenv("BPID");
   char *ptr = strtok(BPID, ":");
 
-  char *spid = malloc(sizeof(pid));
+  char *spid = malloc(sizeof(pid) + 1);
   sprintf(spid, "%d", pid);
 
   //Se c'è un solo PID non entra mai nel while
   if (strchr(BPID, ':') == NULL)
     BPID = "";
 
-  char *new = malloc(sizeof(BPID));
+  char *new = malloc(sizeof(BPID) + 1);
   while (ptr != NULL)
   {
     if (strcmp(ptr, spid) != 0)
@@ -147,6 +148,7 @@ void bpid_remove(pid_t pid)
   setenv("BPID", new, 1);
 
   free(ptr);
+  free(new);
 }
 
 void runcommand(char **cline, int where) /* esegue un comando */
