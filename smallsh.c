@@ -114,8 +114,6 @@ void bpid_add(pid_t pid)
 
   setenv("BPID", new, 1);
 
-  //printf("BPID è %s", getenv("BPID"));
-
   free(new);
 }
 
