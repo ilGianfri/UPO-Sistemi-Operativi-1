@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <signal.h>
+#include <string.h>
 
 #define EOL 1 		/* end of line */
 #define ARG 2		/* argomento normale */
@@ -24,4 +26,9 @@ int gettok(char **outptr);	/* legge un simbolo */
 int procline();			/* tratta una riga di input */
 
 void runcommand(char **cline,int where);	/* esegue un comando */
+
+void processEndNotifier();
+void sig_handler(int sig);
+void bpid_remove(pid_t pid);
+void bpid_add(pid_t pid);
 

@@ -1,11 +1,8 @@
 #include "smallsh.h"
-#include<signal.h>
 #include <sys/types.h>
 
 char *prompt;
 pid_t pid_foreground;
-void processEndNotifier();
-void sig_handler(int sig);
 
 int procline(void) /* tratta una riga di input */
 {
@@ -83,6 +80,7 @@ void processEndNotifier()
   while ((pid = waitpid(-1, &exitcode, WNOHANG)) > 0)
   {
     printf("Il processo %d è terminato con codice %d\n", pid, WEXITSTATUS(exitcode));
+    bpid_remove(pid);
   }
 }
 
@@ -97,8 +95,70 @@ void sig_handler(int sig)
   signal(SIGINT, SIG_DFL);
 }
 
+//punto 5
+void bpid_add(pid_t pid)
+{
+  char *BPID = getenv("BPID");
+  char *new = malloc(sizeof(BPID) + sizeof(pid) + 1);
+
+  strcpy(new, BPID);
+  
+  char *spid = malloc(sizeof(pid));
+  sprintf(spid, "%d", pid);
+  
+  strcat(new, ":");
+  strcat(new, spid);
+  
+  if (new[0] == ':')
+    memmove(new, new+1, strlen(new));
+
+  setenv("BPID", new, 1);
+
+  //printf("BPID è %s", getenv("BPID"));
+
+  free(new);
+}
+
+void bpid_remove(pid_t pid)
+{
+  char *BPID = getenv("BPID");
+  char *ptr = strtok(BPID, ":");
+
+  char *spid = malloc(sizeof(pid));
+  sprintf(spid, "%d", pid);
+
+  //Se c'è un solo PID non entra mai nel while
+  if (strchr(BPID, ':') == NULL)
+    BPID = "";
+
+  char *new = malloc(sizeof(BPID));
+  while (ptr != NULL)
+  {
+    if (strcmp(ptr, spid) != 0)
+    {
+      strcat(new, ":");
+      strcat(new, ptr);
+    }
+
+    ptr = strtok(NULL, ":");
+  }
+
+  if (new[0] == ':')
+      memmove(new, new+1, strlen(new));
+
+  setenv("BPID", new, 1);
+
+  free(ptr);
+}
+
 void runcommand(char **cline, int where) /* esegue un comando */
 {
+  if (strcmp(*cline, "bp") == 0)
+  {
+    printf("\nBPID: %s\n", getenv("BPID"));
+    return;
+  }
+
   pid_t pid;
   int exitstat, ret;
 
@@ -131,6 +191,7 @@ void runcommand(char **cline, int where) /* esegue un comando */
   else
   {
     signal(SIGINT, SIG_DFL);
+    bpid_add(pid);
     printf("\nProcesso in background. PID: %d\n", pid);
   }
 
@@ -142,8 +203,15 @@ int main()
 {
   signal(SIGINT, SIG_DFL);
 
+  //Crea variabile d'ambiente vuota BPID
+  int bpidres = setenv("BPID", "", 1);
+  if (bpidres != 0)
+    perror("Impossibile creare variabile d'ambiente BPID");
+
   prompt = malloc(100);
   sprintf(prompt, "%%%s:%s:", getenv("USER"), getenv("HOME"));
   while (userin(prompt) != EOF)
     procline();
+
+  free(prompt);
 }
