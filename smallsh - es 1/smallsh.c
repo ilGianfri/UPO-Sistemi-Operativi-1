@@ -99,11 +99,11 @@ void sig_handler(int sig)
 void bpid_add(pid_t pid)
 {
   char *BPID = getenv("BPID");
-  char *new = malloc(sizeof(BPID) + sizeof(pid) + 1);
+  char *new = calloc(sizeof(BPID) + sizeof(pid) + 1, sizeof(char));
 
   strcpy(new, BPID);
   
-  char *spid = malloc(sizeof(pid) + 1);
+  char *spid = calloc(sizeof(pid) + 1, sizeof(char));
   sprintf(spid, "%d", pid);
   
   strcat(new, ":");
@@ -123,14 +123,14 @@ void bpid_remove(pid_t pid)
   char *BPID = getenv("BPID");
   char *ptr = strtok(BPID, ":");
 
-  char *spid = malloc(sizeof(pid) + 1);
+  char *spid = (char *)calloc(sizeof(pid) + 1, sizeof(char));
   sprintf(spid, "%d", pid);
 
   //Se c'è un solo PID non entra mai nel while
   if (strchr(BPID, ':') == NULL)
     BPID = "";
 
-  char *new = malloc(sizeof(BPID) + 1);
+  char *new = (char *)calloc(sizeof(BPID) + 1, sizeof(char));
   while (ptr != NULL)
   {
     if (strcmp(ptr, spid) != 0)
@@ -208,7 +208,8 @@ int main()
   if (bpidres != 0)
     perror("Impossibile creare variabile d'ambiente BPID");
 
-  prompt = malloc(100);
+  prompt = calloc(100, sizeof(char));
+
   sprintf(prompt, "%%%s:%s:", getenv("USER"), getenv("HOME"));
   while (userin(prompt) != EOF)
     procline();
