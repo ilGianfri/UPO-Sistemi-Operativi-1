@@ -4,12 +4,12 @@
 char *prompt;
 pid_t pid_foreground;
 
-int procline(void) /* tratta una riga di input */
+int procline(void)        /* tratta una riga di input */
 {
-  char *arg[MAXARG + 1]; /* array di puntatori per runcommand */
-  int toktype;           /* tipo del simbolo nel comando */
-  int narg;              /* numero di argomenti considerati finora */
-  int type;              /* FOREGROUND o BACKGROUND */
+  char *arg[MAXARG + 1];  /* array di puntatori per runcommand */
+  int toktype;            /* tipo del simbolo nel comando */
+  int narg;               /* numero di argomenti considerati finora */
+  int type;               /* FOREGROUND o BACKGROUND */
 
   narg = 0;
 
@@ -44,9 +44,9 @@ int procline(void) /* tratta una riga di input */
       }
 
       /* se fine riga, procline e' finita */
-
       if (toktype == EOL)
       {
+        /* Notifica dei processi in background terminati */
         processEndNotifier();
         return 1;
       }
@@ -63,7 +63,7 @@ int procline(void) /* tratta una riga di input */
 //Punto 2
 void processEndNotifier()
 {
-  int exitcode;
+  int exitcode = 0;
   pid_t pid;
 
   /*
@@ -87,11 +87,14 @@ void processEndNotifier()
 //punto 3
 void sig_handler(int sig)
 {
+  /* Se il segnale ricevuto è un SIGINT, lo ridireziona al processo in foreground */
   if (sig == SIGINT)
   {
     kill(pid_foreground, SIGINT);
+    //pid_foreground = NULL;
   }
 
+  /* Ridireziona la gestione del segnale all'azione di default */
   signal(SIGINT, SIG_DFL);
 }
 
@@ -126,7 +129,7 @@ void bpid_remove(pid_t pid)
   char *spid = (char *)calloc(sizeof(pid) + 1, sizeof(char));
   sprintf(spid, "%d", pid);
 
-  //Se c'è un solo PID non entra mai nel while
+  /* Se c'è un solo PID non entra mai nel while perchè c'è un solo PID*/
   if (strchr(BPID, ':') == NULL)
     BPID = "";
 
@@ -184,13 +187,17 @@ void runcommand(char **cline, int where) /* esegue un comando */
 
   if (where == FOREGROUND)
   {
+    /* Se il comando è in foreground salva il pid e ridireziona la gestione di SIGINT al metodo sig_handler */
     signal(SIGINT, sig_handler);
     pid_foreground = pid;
+
     ret = wait(&exitstat);
   }
   else
   {
+    /* Se in background, gestione di default di SIGINT */
     signal(SIGINT, SIG_DFL);
+    /* Aggiunge il pid del nuovo processo in background alla variabile d'ambiente BPID  */
     bpid_add(pid);
     printf("\nProcesso in background. PID: %d\n", pid);
   }
@@ -201,18 +208,22 @@ void runcommand(char **cline, int where) /* esegue un comando */
 
 int main()
 {
+  /* Gestione standard del SIGINT */ 
   signal(SIGINT, SIG_DFL);
 
-  //Crea variabile d'ambiente vuota BPID
+  /* Crea variabile d'ambiente vuota BPID */
   int bpidres = setenv("BPID", "", 1);
   if (bpidres != 0)
     perror("Impossibile creare variabile d'ambiente BPID");
 
+  /* Alloca spazio per il prompt. calloc invece di malloc perchè viene anche settato a 0 */
   prompt = calloc(100, sizeof(char));
 
+  /* Popola il prompt tramite variabili d'ambiente */
   sprintf(prompt, "%%%s:%s:", getenv("USER"), getenv("HOME"));
   while (userin(prompt) != EOF)
     procline();
 
+  /* Alla chiusura dealloca il prompt */
   free(prompt);
 }
