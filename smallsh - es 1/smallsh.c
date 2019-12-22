@@ -60,7 +60,8 @@ int procline(void)        /* tratta una riga di input */
   }
 }
 
-//Punto 2
+/* PUNTO 2 - Per i comandi lanciati in background, stampare informazioni sul fatto che il comando è
+terminato; per i comandi (in bg o fg) terminati da un segnale, informare analogamente l'utente. */
 void processEndNotifier()
 {
   int exitcode = 0;
@@ -84,7 +85,10 @@ void processEndNotifier()
   }
 }
 
-//punto 3
+/* PUNTO 3 - Ammettere la possibilità di interrompere un comando con il segnale di interruzione, senza però
+interrompere anche l'interprete (che è ciò che avviene nella versione fornita). L’'interprete deve
+ignorare il segnale di interruzione solo quando è in corso un comando in foreground, mentre
+deve poter essere interrotto negli altri casi; */
 void sig_handler(int sig)
 {
   /* Se il segnale ricevuto è un SIGINT, lo ridireziona al processo in foreground */
@@ -98,42 +102,57 @@ void sig_handler(int sig)
   signal(SIGINT, SIG_DFL);
 }
 
-//punto 5
+/* PUNTO 5 - Tenere traccia tramite una variabile d’ambiente BPID dell’elenco dei processi attualmente in
+background. Tale variabile deve essere aggiornata quando si crea un nuovo processo in
+background e quando se ne cattura la sua terminazione */
 void bpid_add(pid_t pid)
 {
+  /* Prendo il contenuto della variabile d'ambiente BPID */
   char *BPID = getenv("BPID");
   char *new = calloc(sizeof(BPID) + sizeof(pid) + 1, sizeof(char));
 
   strcpy(new, BPID);
   
+  /* Alloco lo spazio per contenere il PID come array di char */
   char *spid = calloc(sizeof(pid) + 1, sizeof(char));
   sprintf(spid, "%d", pid);
   
+  /* Concateno i vari PID con : */
   strcat(new, ":");
   strcat(new, spid);
   
+  /* Tolgo il primo : se è all'inizio della stringa */
   if (new[0] == ':')
     memmove(new, new+1, strlen(new));
 
+  /* Aggiorno BPID con il nuovo contenuto */
   setenv("BPID", new, 1);
 
+  /* Libero lo spazio allocato */
   free(new);
   free(spid);
 }
 
 void bpid_remove(pid_t pid)
 {
+    /* Prendo il contenuto della variabile d'ambiente BPID */
   char *BPID = getenv("BPID");
+
+  /* Separo ogni : per poter iterare */
   char *ptr = strtok(BPID, ":");
 
+  /* Trasformo il PID da rimuovere in array di char */
   char *spid = (char *)calloc(sizeof(pid) + 1, sizeof(char));
   sprintf(spid, "%d", pid);
 
-  /* Se c'è un solo PID non entra mai nel while perchè c'è un solo PID*/
+  /* Se c'è un solo PID non entra mai nel while */
   if (strchr(BPID, ':') == NULL)
     BPID = "";
 
   char *new = (char *)calloc(sizeof(BPID) + 1, sizeof(char));
+
+  /* Itero ogni PID presente nella stringa. Se non è quello da rimuovere, lo aggiungo alla nuova stringa
+  da restituire */
   while (ptr != NULL)
   {
     if (strcmp(ptr, spid) != 0)
@@ -145,17 +164,21 @@ void bpid_remove(pid_t pid)
     ptr = strtok(NULL, ":");
   }
 
+  /* Tolgo il primo : se è all'inizio della stringa */
   if (new[0] == ':')
       memmove(new, new+1, strlen(new));
 
+  /* Aggiorno BPID con il nuovo contenuto */
   setenv("BPID", new, 1);
 
+  /* Libero lo spazio allocato */
   free(ptr);
   free(new);
 }
 
 void runcommand(char **cline, int where) /* esegue un comando */
 {
+  /* Gestione comando bp */
   if (strcmp(*cline, "bp") == 0)
   {
     printf("\nBPID: %s\n", getenv("BPID"));
@@ -172,8 +195,9 @@ void runcommand(char **cline, int where) /* esegue un comando */
     return;
   }
 
+  /* processo figlio */
   if (pid == (pid_t)0)
-  { /* processo figlio */
+  {
 
     /* esegue il comando il cui nome e' il primo elemento di cline,
        passando cline come vettore di argomenti */
