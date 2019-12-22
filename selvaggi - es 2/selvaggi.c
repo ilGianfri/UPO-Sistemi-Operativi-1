@@ -22,7 +22,7 @@ int main(int argc, char *argv[])
 {
     if (argc < 4) 
     {
-        perror("Parametri non validi.\n Uso: ./selvaggi #n_selvaggi# #n porzioni# #n_giri#");
+        perror("Parametri non validi.\nUso: ./selvaggi #n_selvaggi# #n porzioni# #n_giri#");
         return 1;
     }
 
@@ -38,9 +38,9 @@ int main(int argc, char *argv[])
         condiviso tra tutti i processi parenti (tramite id).
 
         Crea 3 semafori condivisi.
-            - 1 per accedere alla variabile porzioni (0)
-            - 1 per indicare la pentola vuota   (1)
-            - 1 per indicare la pentola piena   (2)
+            - 1 per accedere alla variabile porzioni    (0)
+            - 1 per indicare la pentola vuota           (1)
+            - 1 per indicare la pentola piena           (2)
 
         0600 flag - permessi di lettura/scrittura al proprietario e nessun diritto agli altri
 
