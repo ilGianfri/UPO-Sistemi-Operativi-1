@@ -9,11 +9,20 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-int porzioni = 0;                   /* Tiene conto del numero di porzioni ancora in pentola */
-int n_volte_riempie = 0;            /* Tiene conto del numero di volte che il cuoco ha riempito la pentola */
-
-int n_selvaggi = 0, n_porzioni = 0, n_giri = 0;
+int n_selvaggi = 0;
+int shmid;
 pid_t semid;
+
+/* struct per le variabili da condividere con i vari processi */
+typedef struct condivise
+{
+    int porzioni;                   /* Tiene conto del numero di porzioni ancora in pentola */
+    int n_volte_riempie;            /* Tiene conto del numero di volte che il cuoco ha riempito la pentola */
+    int n_porzioni;                 /* Numero porzioni massime che la pentola può contenere */
+    int n_giri;                     /* Numero di volte cui un selvaggio mangia prima di terminare */
+} var_condivise;
+
+var_condivise *shared;
 
 void cuoco();
 void selvaggio();
@@ -22,14 +31,9 @@ int main(int argc, char *argv[])
 {
     if (argc < 4) 
     {
-        perror("Parametri non validi.\nUso: ./selvaggi #n_selvaggi# #n porzioni# #n_giri#");
+        perror("Parametri non validi.\nUso: ./selvaggi #n_selvaggi# #n_porzioni# #n_giri#");
         return 1;
     }
-
-    /* Salva i vari parametri passati nelle variabili */
-    n_selvaggi = atoi(argv[1]);
-    n_porzioni = atoi(argv[2]);
-    n_giri = atoi(argv[3]);
 
     /*  
         Creazione dei semafori condivisi fra i processi
@@ -54,12 +58,41 @@ int main(int argc, char *argv[])
         exit(1);
     }
 
-    printf("ID semafori: %d\n",semid);    
+
+    /*  
+    
+        Alloca la memoria condivisa fra i processi per le variabili condivise 
+        
+        IPC_PRIVATE indica che solo i processi figli potranno accedervi
+        sizeof(int) indica quanto spazio deve essere allocato
+        0600 permessi di lettura e scrittura al proprietario
+
+    */
+    shmid = shmget(IPC_PRIVATE, sizeof(int), 0600);
+    if (shmid < 0)
+        perror("Errore creazione memoria condivisa");
+
+    /*
+        Collega il segmento di memoria condivisa da shmid allo spazio di indirizzi del processo chiamante
+
+        NULL poichè l'indirizzo viene scelto dal sistema
+        0 = flag per comportamenti opzionali, 0 default
+
+    */
+    shared = (var_condivise *) shmat(shmid, NULL, 0);
+
+    /* Salva i vari parametri passati nelle variabili */
+    n_selvaggi = atoi(argv[1]);
+    shared->n_porzioni = atoi(argv[2]);
+    shared->n_giri = atoi(argv[3]);
+
+    /* inizializza la pentola come piena */
+    shared->porzioni = shared->n_porzioni;
 
     /*  Imposta i valori iniziali dei semafori */
-    seminit(semid, 0, 1);
-    seminit(semid, 1, 1);
-    seminit(semid, 2, 0);
+    seminit(semid, 0, 1); /* MUTEX PORZIONI */
+    seminit(semid, 1, 0); /* PENTOLA VUOTA */
+    seminit(semid, 2, 1); /* PENTOLA PIENA */
 
     /* Creazione processo cuoco */
     pid_t pidcuoco = fork();
@@ -82,29 +115,34 @@ int main(int argc, char *argv[])
         else if (selvid == (pid_t)0)
             selvaggio();
     }
+
+    //TODO: ASPETTARE CHE TERMINANO TUTTI I FIGLI E STAMPARE I DATI
 }
 
 void cuoco()
 {
     while (1)
     {
+        /* Down del semaforo 'vuoto' */
+        down(semid, 1);
+
         /*  Down del semaforo 'mutex' per accedere alla 
             variabile porzioni */
         down(semid, 0);
         printf("Cuoco accede alla variabile porzioni\n");
-        /* Down del semaforo 'vuoto' */
-        down(semid, 1);
 
-        /* Incremento porzioni */
-        porzioni = n_porzioni;
-        n_volte_riempie++;
+        /* Incremento porzioni - cuoco cucina */
+        for (int i = 0; i < shared->n_porzioni; ++i)
+            shared->porzioni++;
+
+        /* Up del semaforo 'mutex' porzioni */
+        up(semid, 0);
+
+        shared->n_volte_riempie++;
         printf("Pentola riempita\n");
 
         /* Up del semaforo 'pieno' */
         up(semid, 2);
-        
-        /* Up del semaforo 'mutex' */
-        up(semid, 0);
         
         printf("Cuoco dorme\n");
     }
@@ -112,20 +150,28 @@ void cuoco()
 
 void selvaggio()
 {
-    for (int i = 0; i < n_giri; i++)
+    for (int i = 0; i < shared->n_giri; ++i)
     {
+        /* Down semaforo 'pieno' */
+        down(semid, 2);
+
         /* Accede alla variabile porzioni */
         down(semid, 0);
+
         printf("Selvaggio accede a porzioni\n");
-        if (porzioni == 0)
+        if (shared->porzioni == 0)
         {
             printf("Pentola vuota, sveglia il cuoco\n");
-            /* Sveglia lo stupido cuoco */
+
+            /* Libera variabile porzioni */
+            up(semid, 0);
+            /* Sveglia cuoco - semaforo vuoto */
             up(semid, 1);
         }
-        porzioni--;
-        printf("Selvaggio mangia una porzione, restano %d porzioni\n", porzioni);
+
+        shared->porzioni--;
+        printf("Selvaggio mangia una porzione, restano %d porzioni\n", shared->porzioni);
         /* Libera la variabile porzioni */
-        up(semid, 0);
+        up(semid, 0);       
     }
 }
