@@ -8,6 +8,7 @@
 #include "semfun.h"
 #include <sys/types.h>
 #include <unistd.h>
+#include <signal.h>
 
 int n_selvaggi = 0;
 int shmid;
@@ -145,6 +146,7 @@ void cuoco()
 
 void selvaggio()
 {
+    pid_t pid = getpid();
     for (int i = 0; i < shared->n_giri; ++i)
     {
         /* Accede alla variabile porzioni */
@@ -162,7 +164,7 @@ void selvaggio()
         }
 
         shared->porzioni--;
-        printf("Selvaggio mangia una porzione, restano %d porzioni\n", shared->porzioni);
+        printf("Selvaggio con PID %d mangia una porzione, restano %d porzioni\n", pid, shared->porzioni);
         /* Libera la variabile porzioni */
         up(semid, 0);  
     }
