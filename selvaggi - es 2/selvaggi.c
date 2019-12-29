@@ -124,7 +124,7 @@ int main(int argc, char *argv[])
         
     }
 
-    /* Chiude il processo cuodo */
+    /* Chiude il processo cuoco */
     kill(pidcuoco, SIGTERM);
     printf("\n\nLa pentola è stata riempita %d volte. Sono avanzate %d porzioni\n", shared->n_volte_riempie, shared->porzioni);
 }
