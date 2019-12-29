@@ -94,7 +94,7 @@ void sig_handler(int sig)
   if (sig == SIGINT)
   {
     kill(pid_foreground, SIGINT);
-    //pid_foreground = NULL;
+    pid_foreground = 0;
   }
 
   /* Ridireziona la gestione del segnale all'azione di default */

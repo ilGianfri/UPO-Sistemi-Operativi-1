@@ -120,12 +120,14 @@ int main(int argc, char *argv[])
         {
             /* Attende che il selvaggio abbia terminato */
             wait(NULL);
-        }
-        
+        }      
     }
 
     /* Chiude il processo cuoco */
     kill(pidcuoco, SIGTERM);
+
+    /* Libera la memoria condivisa */
+    shmctl(shmid, IPC_RMID, NULL);
     printf("\n\nLa pentola è stata riempita %d volte. Sono avanzate %d porzioni\n", shared->n_volte_riempie, shared->porzioni);
 }
 
