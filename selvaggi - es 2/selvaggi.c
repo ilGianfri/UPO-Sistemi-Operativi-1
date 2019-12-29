@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <pthread.h>
 #include <semaphore.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
@@ -9,6 +8,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <signal.h>
+#include <sys/wait.h>
 
 int n_selvaggi = 0;
 int shmid;
@@ -105,6 +105,7 @@ int main(int argc, char *argv[])
     else if (pidcuoco == (pid_t)0)
         cuoco();
 
+    /* Creazione processi selvaggi */
     for (int i = 0; i < n_selvaggi; i++)
     {
         pid_t selvid = fork();
@@ -114,10 +115,18 @@ int main(int argc, char *argv[])
             return 1;
         }
         else if (selvid == (pid_t)0)
-            selvaggio();
+            selvaggio(i + 1);
+        else
+        {
+            /* Attende che il selvaggio abbia terminato */
+            wait(NULL);
+        }
+        
     }
 
-    //TODO: ASPETTARE CHE TERMINANO TUTTI I FIGLI E STAMPARE I DATI
+    /* Chiude il processo cuodo */
+    kill(pidcuoco, SIGTERM);
+    printf("\n\nLa pentola è stata riempita %d volte. Sono avanzate %d porzioni\n", shared->n_volte_riempie, shared->porzioni);
 }
 
 void cuoco()
@@ -134,38 +143,40 @@ void cuoco()
             for (int i = 0; i < shared->n_porzioni; ++i)
                 shared->porzioni++;
 
+            /* Incrementa il numero di volte in cui la pentola è riempita */
             shared->n_volte_riempie++;
-            printf("Pentola riempita\n");
+            printf("\nPentola riempita. Cuoco dorme\n\n");
 
-            printf("Cuoco dorme\n");
             /* Up del semaforo 'pieno' */
             up(semid, 2);
         }
     }
 }
 
-void selvaggio()
+void selvaggio(int n)
 {
-    pid_t pid = getpid();
     for (int i = 0; i < shared->n_giri; ++i)
     {
         /* Accede alla variabile porzioni */
         down(semid, 0);
 
-        printf("Selvaggio accede a porzioni\n");
+        printf("Selvaggio %d accede a porzioni\n", n);
         if (shared->porzioni == 0)
         {
             printf("Pentola vuota, sveglia il cuoco\n");
 
-             /* Sveglia cuoco - semaforo vuoto */
+             /* Sveglia cuoco - semaforo 'vuoto' */
              up(semid, 1);
-             /* Aspetta che il cuoco riempie */
+             /* Aspetta che il cuoco riempie - semaforo 'pieno' */
              down(semid, 2);
         }
 
         shared->porzioni--;
-        printf("Selvaggio con PID %d mangia una porzione, restano %d porzioni\n", pid, shared->porzioni);
+        printf("Selvaggio %d mangia una porzione, restano %d porzioni\n", n, shared->porzioni);
         /* Libera la variabile porzioni */
         up(semid, 0);  
     }
+
+    /* Esecuzione selvaggio terminata, termina con codice 0 */
+    exit(0);
 }

@@ -80,15 +80,14 @@ void processEndNotifier()
   */
   while ((pid = waitpid(-1, &exitcode, WNOHANG)) > 0)
   {
-    printf("Il processo %d è terminato con codice %d\n", pid, WEXITSTATUS(exitcode));
+    printf("Il processo con PID %d è terminato con codice %d\n", pid, WEXITSTATUS(exitcode));
     bpid_remove(pid);
   }
 }
 
 /* PUNTO 3 - Ammettere la possibilità di interrompere un comando con il segnale di interruzione, senza però
-interrompere anche l'interprete (che è ciò che avviene nella versione fornita). L’'interprete deve
-ignorare il segnale di interruzione solo quando è in corso un comando in foreground, mentre
-deve poter essere interrotto negli altri casi; */
+interrompere anche l'interprete. L’'interprete deve ignorare il segnale di interruzione solo quando è in corso un comando 
+in foreground, mentre deve poter essere interrotto negli altri casi; */
 void sig_handler(int sig)
 {
   /* Se il segnale ricevuto è un SIGINT, lo ridireziona al processo in foreground */
