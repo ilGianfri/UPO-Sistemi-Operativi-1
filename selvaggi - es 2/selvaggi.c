@@ -17,10 +17,10 @@ pid_t semid;
 /* struct per le variabili da condividere con i vari processi */
 typedef struct condivise
 {
-    int porzioni;                   /* Tiene conto del numero di porzioni ancora in pentola */
-    int n_volte_riempie;            /* Tiene conto del numero di volte che il cuoco ha riempito la pentola */
-    int n_porzioni;                 /* Numero porzioni massime che la pentola può contenere */
-    int n_giri;                     /* Numero di volte cui un selvaggio mangia prima di terminare */
+    int porzioni;        /* Tiene conto del numero di porzioni ancora in pentola */
+    int n_volte_riempie; /* Tiene conto del numero di volte che il cuoco ha riempito la pentola */
+    int n_porzioni;      /* Numero porzioni massime che la pentola può contenere */
+    int n_giri;          /* Numero di volte cui un selvaggio mangia prima di terminare */
 } var_condivise;
 
 var_condivise *shared;
@@ -30,7 +30,7 @@ void selvaggio();
 
 int main(int argc, char *argv[])
 {
-    if (argc < 4) 
+    if (argc < 4)
     {
         perror("Parametri non validi.\nUso: ./selvaggi #n_selvaggi# #n_porzioni# #n_giri#");
         return 1;
@@ -53,12 +53,11 @@ int main(int argc, char *argv[])
     */
 
     semid = semget(IPC_PRIVATE, 3, 0600);
-    if (semid == -1) 
+    if (semid == -1)
     {
         perror("Errore semget\n");
         exit(1);
     }
-
 
     /*  
     
@@ -80,7 +79,7 @@ int main(int argc, char *argv[])
         0 = flag per comportamenti opzionali, 0 default
 
     */
-    shared = (var_condivise *) shmat(shmid, NULL, 0);
+    shared = (var_condivise *)shmat(shmid, NULL, 0);
 
     /* Salva i vari parametri passati nelle variabili */
     n_selvaggi = atoi(argv[1]);
@@ -120,7 +119,7 @@ int main(int argc, char *argv[])
         {
             /* Attende che il selvaggio abbia terminato */
             wait(NULL);
-        }      
+        }
     }
 
     /* Chiude il processo cuoco */
@@ -167,16 +166,16 @@ void selvaggio(int n)
         {
             printf("Pentola vuota, sveglia il cuoco\n");
 
-             /* Sveglia cuoco - semaforo 'vuoto' */
-             up(semid, 1);
-             /* Aspetta che il cuoco riempie - semaforo 'pieno' */
-             down(semid, 2);
+            /* Sveglia cuoco - semaforo 'vuoto' */
+            up(semid, 1);
+            /* Aspetta che il cuoco riempie - semaforo 'pieno' */
+            down(semid, 2);
         }
 
         shared->porzioni--;
         printf("Selvaggio %d mangia una porzione, restano %d porzioni\n", n, shared->porzioni);
         /* Libera la variabile porzioni */
-        up(semid, 0);  
+        up(semid, 0);
     }
 
     /* Esecuzione selvaggio terminata, termina con codice 0 */
