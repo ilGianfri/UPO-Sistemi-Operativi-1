@@ -234,7 +234,8 @@ int main()
   /* Gestione standard del SIGINT */ 
   signal(SIGINT, SIG_DFL);
 
-  /* Crea variabile d'ambiente vuota BPID */
+  /* Crea variabile d'ambiente vuota BPID 
+     1 - overwrite*/
   int bpidres = setenv("BPID", "", 1);
   if (bpidres != 0)
     perror("Impossibile creare variabile d'ambiente BPID");

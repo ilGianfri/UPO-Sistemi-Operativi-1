@@ -115,12 +115,10 @@ int main(int argc, char *argv[])
         }
         else if (selvid == (pid_t)0)
             selvaggio(i + 1);
-        else
-        {
-            /* Attende che il selvaggio abbia terminato */
-            wait(NULL);
-        }
     }
+
+    for (int i=0; i < n_selvaggi; i++)
+        wait(NULL);
 
     /* Chiude il processo cuoco */
     kill(pidcuoco, SIGTERM);
