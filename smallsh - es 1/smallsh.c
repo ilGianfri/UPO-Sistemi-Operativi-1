@@ -4,12 +4,12 @@
 char *prompt;
 pid_t pid_foreground;
 
-int procline(void)        /* tratta una riga di input */
+int procline(void) /* tratta una riga di input */
 {
-  char *arg[MAXARG + 1];  /* array di puntatori per runcommand */
-  int toktype;            /* tipo del simbolo nel comando */
-  int narg;               /* numero di argomenti considerati finora */
-  int type;               /* FOREGROUND o BACKGROUND */
+  char *arg[MAXARG + 1]; /* array di puntatori per runcommand */
+  int toktype;           /* tipo del simbolo nel comando */
+  int narg;              /* numero di argomenti considerati finora */
+  int type;              /* FOREGROUND o BACKGROUND */
 
   narg = 0;
 
@@ -29,7 +29,7 @@ int procline(void)        /* tratta una riga di input */
       if (narg < MAXARG)
         narg++;
       break;
-    
+
     /* se fine riga o ';' o '&' esegue il comando ora contenuto in arg,
 	 mettendo NULL per segnalare la fine degli argomenti: serve a execvp */
     case EOL:
@@ -111,18 +111,18 @@ void bpid_add(pid_t pid)
   char *new = calloc(sizeof(BPID) + sizeof(pid) + 1, sizeof(char));
 
   strcpy(new, BPID);
-  
+
   /* Alloco lo spazio per contenere il PID come array di char */
   char *spid = calloc(sizeof(pid) + 1, sizeof(char));
   sprintf(spid, "%d", pid);
-  
+
   /* Concateno i vari PID con : */
   strcat(new, ":");
   strcat(new, spid);
-  
+
   /* Tolgo il primo : se è all'inizio della stringa */
   if (new[0] == ':')
-    memmove(new, new+1, strlen(new));
+    memmove(new, new + 1, strlen(new));
 
   /* Aggiorno BPID con il nuovo contenuto */
   setenv("BPID", new, 1);
@@ -134,7 +134,7 @@ void bpid_add(pid_t pid)
 
 void bpid_remove(pid_t pid)
 {
-    /* Prendo il contenuto della variabile d'ambiente BPID */
+  /* Prendo il contenuto della variabile d'ambiente BPID */
   char *BPID = getenv("BPID");
 
   /* Separo ogni : per poter iterare */
@@ -165,7 +165,7 @@ void bpid_remove(pid_t pid)
 
   /* Tolgo il primo : se è all'inizio della stringa */
   if (new[0] == ':')
-      memmove(new, new+1, strlen(new));
+    memmove(new, new + 1, strlen(new));
 
   /* Aggiorno BPID con il nuovo contenuto */
   setenv("BPID", new, 1);
@@ -231,7 +231,7 @@ void runcommand(char **cline, int where) /* esegue un comando */
 
 int main()
 {
-  /* Gestione standard del SIGINT */ 
+  /* Gestione standard del SIGINT */
   signal(SIGINT, SIG_DFL);
 
   /* Crea variabile d'ambiente vuota BPID 

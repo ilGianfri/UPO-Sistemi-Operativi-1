@@ -117,6 +117,7 @@ int main(int argc, char *argv[])
             selvaggio(i + 1);
     }
 
+    /* Aspetta che tutti i selvaggi abbiano terminato */
     for (int i=0; i < n_selvaggi; i++)
         wait(NULL);
 
@@ -174,6 +175,8 @@ void selvaggio(int n)
         printf("Selvaggio %d mangia una porzione, restano %d porzioni\n", n, shared->porzioni);
         /* Libera la variabile porzioni */
         up(semid, 0);
+        
+        sleep(1);
     }
 
     /* Esecuzione selvaggio terminata, termina con codice 0 */
