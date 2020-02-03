@@ -55,4 +55,5 @@ dkms.conf
 .vscode/settings.json
 .vscode/tasks.json
 smallsh
+selvaggi
 *.zip
