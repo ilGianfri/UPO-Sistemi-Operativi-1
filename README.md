@@ -1,16 +1,14 @@
 # Esercizi per l'esame di laboratorio del corso di Sistemi Operativi 1 anno 2019/2020
 
-Esercizi per l'esame di laboratorio del corso di Sistemi Operativi 1 anno 2019/2020
 
+
+## Smallsh
 smallsh.h, smallsh.c e input.c contengono il codice commentato della shell illustrata nelle esercitazioni.
 
 Compilare usando il makefile. "make clean" rimuove i file prodotti dalla compilazione
 
 Il file background.jpg è un disegno relativo al lancio di comandi in background (punti 2 e 3 dell'esercizio)
 
-Si consiglia di non utilizzare l'esistenza di segnali diversi da quelli menzionati negli appunti.
-
-## Smallsh
 Utilizzando soltanto gli strumenti presentati nel corso, modificare il semplice interprete di comandi
 "smallsh" presentato nelle esercitazioni in modo da:
 1. ammettere la possibilità di lanciare comandi in background con la notazione:
