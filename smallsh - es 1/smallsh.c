@@ -214,7 +214,7 @@ void runcommand(char **cline, int where) /* esegue un comando */
     signal(SIGINT, sig_handler);
     pid_foreground = pid;
 
-    ret = wait(&exitstat);
+    ret = waitpid(pid, &exitstat, 0);
   }
   else
   {
