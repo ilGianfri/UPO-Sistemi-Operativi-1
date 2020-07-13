@@ -2,6 +2,7 @@
 
 [![CodeFactor](https://www.codefactor.io/repository/github/ilgianfri/upo-sistemi-operativi-1/badge)](https://www.codefactor.io/repository/github/ilgianfri/upo-sistemi-operativi-1)
 ![Last commit](https://img.shields.io/github/last-commit/ilGianfri/upo-sistemi-operativi-1.svg?style=popout-square)
+![License](https://img.shields.io/github/license/ilGianfri/XboxOn.svg?style=popout-square) 
 
 ## Smallsh
 smallsh.h, smallsh.c e input.c contengono il codice commentato della shell illustrata nelle esercitazioni.
